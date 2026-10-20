@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photo Booth - Foto berdua lewat lobby</title>
+<style>
+*{box-sizing:border-box;margin:0}
+:root{--pk:#ff8fc7;--pk2:#ffc2e0;--pk3:#ffd9ec;--hot:#ff3d8b;--cr:#fff3e2;--ink:#2a1626;--yl:#ffd23f}
+html{scroll-behavior:smooth}
+body{font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--pk3)}
+[hidden]{display:none!important}
+nav{position:sticky;top:0;z-index:9;display:flex;align-items:center;gap:22px;padding:16px 24px;background:#000;color:#fff}
+nav b{margin-right:auto;font-weight:700}
+nav a{color:#fff;text-decoration:none;font-size:14px}
+nav .pill{background:#fff;color:#000;padding:7px 14px;border-radius:8px;font-weight:700}
+.wrap{max-width:1000px;margin:auto}
+.hero{position:relative;background:var(--pk);padding:64px 24px 120px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;align-items:center}
+.hero .wrap>*{animation:in .8s cubic-bezier(.2,.8,.2,1) both}
+.hero .wrap>:last-child{animation-delay:.15s}
+h1{font-size:clamp(76px,15vw,176px);line-height:.78;letter-spacing:-.075em;color:#fff;font-weight:800}
+h1 small{display:block;font-size:.52em;letter-spacing:-.05em;font-weight:600;margin:0 0 0 .08em}
+.tag{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.04em;margin:26px 0 6px;line-height:1.1}
+.hero p{font-size:18px;margin-bottom:22px}
+.btn{display:inline-block;font:700 16px/1.2 inherit;font-family:inherit;cursor:pointer;background:var(--yl);color:var(--ink);border:2px solid var(--ink);border-bottom-width:5px;border-radius:10px;padding:12px 22px;text-decoration:none;text-align:center;transition:transform .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(2px);border-bottom-width:3px}
+.btn.alt{background:var(--hot);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.booth{width:100%;max-width:340px;margin:auto;display:block;animation:float 4s ease-in-out infinite}
+.strip{animation:slide 3s ease-in-out infinite}
+.wave{position:absolute;left:0;bottom:-1px;width:200%;height:54px;animation:drift 14s linear infinite;will-change:transform}
+.sec{padding:56px 24px}
+h2{font-size:clamp(28px,4vw,40px);letter-spacing:-.04em;text-align:center;margin-bottom:12px;line-height:1.15}
+.sub{text-align:center;margin-bottom:28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.card{background:var(--cr);border:2px solid var(--ink);border-bottom-width:7px;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.card h3{font-size:26px;letter-spacing:-.03em;line-height:1.2}
+.card p{font-size:15px;color:#6b4a60}
+input{font:inherit;width:100%;padding:12px 14px;border:2px solid var(--ink);border-radius:12px;background:#fff}
+.ic{display:grid;place-items:center;height:120px;border-radius:12px;background:var(--pk2);font-size:56px}
+.c{max-width:560px;margin:auto;text-align:center;align-items:center}
+.code{font:800 clamp(30px,8vw,46px)/1 ui-monospace,Menlo,monospace;letter-spacing:.06em;color:var(--hot);background:#fff;border:3px dashed var(--hot);border-radius:14px;padding:16px 22px;cursor:pointer}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.slot{padding:12px;border-radius:12px;background:var(--pk3);border:2px solid var(--ink);font-weight:600;transition:background .3s}
+.slot.on{background:var(--pk)}
+.cam{position:relative;width:100%;aspect-ratio:4/3;background:var(--ink);border-radius:16px;overflow:hidden}
+video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#cnt{position:absolute;inset:0;display:grid;place-items:center;font:800 130px system-ui;color:#fff;text-shadow:0 4px 0 var(--hot)}
+#cnt i{font-style:normal;animation:pop .9s both}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#flash.go{animation:flash .45s}
+#strip{width:min(100%,300px);border:2px solid var(--ink);border-radius:8px}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.how .ic{margin:-4px 0 4px}
+.rv{opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s}
+.rv.on{opacity:1;transform:none}
+.rv:nth-child(2){transition-delay:.1s}.rv:nth-child(3){transition-delay:.2s}
+footer{background:#000;color:#fff;text-align:center;padding:28px;font-size:14px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,90px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;transition:transform .3s;z-index:20;max-width:90%}
+#toast.on{transform:translate(-50%,0)}
+@keyframes in{from{opacity:0;transform:translateY(24px)}}
+@keyframes float{50%{transform:translateY(-10px)}}
+@keyframes slide{0%,100%{transform:rotate(8deg)}50%{transform:translateY(12px) rotate(8deg)}}
+@keyframes drift{to{transform:translateX(-50%)}}
+@keyframes pop{from{opacity:0;transform:scale(.4)}40%{opacity:1;transform:scale(1.1)}to{opacity:.9;transform:scale(1)}}
+@keyframes flash{from{opacity:1}to{opacity:0}}
+@media(max-width:760px){.hero .wrap{grid-template-columns:1fr}nav a:not(.pill){display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<nav>
+  <b>Photo Booth</b>
+  <a href="#start">Lobby</a><a href="#how">Cara kerja</a>
+  <a class="pill" href="#start">Mulai foto</a>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <h1><small>photo</small>booth</h1>
+      <div class="tag">Photobox online...kinda</div>
+      <p>Buat lobby, bagikan kode, lalu jepret bareng temanmu.</p>
+      <a class="btn" href="#start">Mulai foto</a>
+    </div>
+    <svg class="booth" viewBox="0 0 300 360" role="img" aria-label="Ilustrasi photobox dengan strip foto">
+      <g stroke="#2a1626" stroke-width="5" stroke-linejoin="round">
+        <rect x="50" y="20" width="200" height="320" rx="18" fill="#fff3e2"/>
+        <rect x="70" y="40" width="160" height="46" rx="10" fill="#ffd23f"/>
+        <circle cx="150" cy="120" r="20" fill="#2a1626"/>
+        <circle cx="150" cy="120" r="8" fill="#ff8fc7" stroke="none"/>
+        <rect x="76" y="156" width="148" height="150" rx="6" fill="#ff3d8b"/>
+        <path d="M112 158v146M150 158v146M188 158v146" stroke-width="3" opacity=".35"/>
+        <path d="M96 306v30M204 306v30" stroke-width="10" stroke-linecap="round"/>
+      </g>
+      <text x="150" y="72" text-anchor="middle" font-family="system-ui" font-weight="800" font-size="30" fill="#2a1626">PHOTO</text>
+      <g transform="translate(222 196)"><g class="strip" stroke="#2a1626" stroke-width="4">
+        <rect width="64" height="172" fill="#fff"/>
+        <g fill="#ffc2e0"><rect x="8" y="8" width="48" height="34"/><rect x="8" y="48" width="48" height="34"/><rect x="8" y="88" width="48" height="34"/><rect x="8" y="128" width="48" height="34"/></g>
+      </g></g>
+    </svg>
+  </div>
+  <svg class="wave" viewBox="0 0 2400 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30q75-30 150 0t150 0 150 0 150 0 150 0 150 0 150 0 150 0 150 0 150 0 150 0 150 0 150 0 150 0 150 0 150 0V80H0Z" fill="#ffd9ec" stroke="#2a1626" stroke-width="3"/></svg>
+</header>
+
+<section class="sec" id="start">
+  <div class="wrap">
+    <h2>Masuk ke photobox</h2>
+    <p class="sub">Buat lobby baru, atau gabung dengan kode dari temanmu.</p>
+
+    <div id="home" class="grid">
+      <form id="fCreate" class="card rv">
+        <h3>Buat lobby</h3>
+        <input id="cName" placeholder="Namamu" required maxlength="20" autocomplete="off">
+        <input id="cLobby" placeholder="Nama lobby, mis. Bestie Day" required maxlength="24" autocomplete="off">
+        <button class="btn alt">Buat lobby</button>
+      </form>
+      <form id="fJoin" class="card rv">
+        <h3>Gabung lobby</h3>
+        <input id="jName" placeholder="Namamu" required maxlength="20" autocomplete="off">
+        <input id="jCode" placeholder="Kode lobby, mis. PB-7K2QF" required maxlength="12" autocomplete="off">
+        <button class="btn">Gabung lobby</button>
+      </form>
+    </div>
+
+    <div id="lobby" class="card c" hidden>
+      <p>Lobby</p>
+      <h3 id="lName"></h3>
+      <button id="lCode" class="code" title="Salin kode"></button>
+      <p>Klik kode untuk menyalin, lalu kirim ke temanmu.</p>
+      <div class="slots"><div id="s1" class="slot"></div><div id="s2" class="slot">Menunggu teman...</div></div>
+      <button id="startBtn" class="btn alt" disabled>Mulai foto</button>
+    </div>
+
+    <div id="booth" class="card c" hidden>
+      <div id="cam" class="cam"><video id="vid" autoplay playsinline muted></video><div id="cnt"></div><div id="flash"></div></div>
+      <h3 id="bInfo"></h3>
+      <div id="result" class="row" hidden>
+        <canvas id="strip"></canvas>
+        <div class="row"><a id="dl" class="btn" download="photobooth.png">Unduh strip foto</a><button id="again" class="btn alt">Lobby baru</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec how" id="how">
+  <div class="wrap">
+    <h2>Cara kerja</h2>
+    <div class="grid" style="margin-top:28px">
+      <div class="card rv"><div class="ic">🎟️</div><h3>Buat lobby</h3><p>Isi namamu dan nama lobby. Kamu langsung mendapat kode unik yang dibuat otomatis.</p></div>
+      <div class="card rv"><div class="ic">🔑</div><h3>Bagikan kode</h3><p>Kirim kode ke temanmu. Dia tinggal memasukkannya di kolom gabung lobby.</p></div>
+      <div class="card rv"><div class="ic">📸</div><h3>Jepret</h3><p>Setelah berdua masuk, host menekan mulai. Empat foto diambil otomatis menjadi satu strip.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>Photo Booth - simulasi photobox untuk foto berdua</footer>
+<div id="toast" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>
